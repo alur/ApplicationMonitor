@@ -1,0 +1,36 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *  nDesk.rc
+ *  The nModules Project
+ *
+ *  Version information for nDesk.
+ *  
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+#include "Version.h"
+
+1 VERSIONINFO
+FILEVERSION 0,2,0,0
+PRODUCTVERSION 0,2,0,0
+FILEOS 0x4
+FILETYPE 0x2
+{
+    BLOCK "StringFileInfo"
+    {
+	    BLOCK "04090000"
+	    {
+            VALUE "Comments", "https://github.com/alur"
+            VALUE "CompanyName", "Erik Welander"
+            VALUE "FileDescription", "ApplicationMonitor LiteStep module"
+            VALUE "FileVersion", "0.2"
+            VALUE "InternalName", "ApplicationMonitor"
+            VALUE "LegalCopyright", "Copyright © 2009 - 2013"
+            VALUE "OriginalFilename", "ApplicationMonitor.dll"
+            VALUE "ProductName", "ApplicationMonitor"
+            VALUE "ProductVersion", "0.2"
+	    }
+    }
+
+    BLOCK "VarFileInfo"
+    {
+	    VALUE "Translation", 0x0409 0x0000
+    }
+}

@@ -1,0 +1,41 @@
+ApplicationMonitor 0.1 by Alurcard2
+
+This module keeps track of whether or not a certain application is running,
+and provides events for when that application starts and ends.
+
+
+Initalizing an application monitor:
+------------------------------------------------------------------------------
+You can initalize application monitors either in a RC, 
+*ApplicationMonitor (name) (application) [update frequency]
+- name: Name which specifies which will identify evars (eg FireFox)
+- application: application to monitor (eg firefox.exe)
+- update frequency: (optional, default=200) how often, in milliseconds, to
+  check the application. min=10, max=2147483647
+
+or with bang command, 
+!ApplicationMonitor (name) (application) [update frequency]
+
+
+Each application monitor will maintain the following Evars:
+------------------------------------------------------------------------------
+(name)IsRunning
+- true if the application is running, false if it is not running.
+
+
+Each application monitor has the following events:
+------------------------------------------------------------------------------
+(name)OnEnd
+- Fires when the monitored application ends (there are no more instances of it
+  running)
+  
+(name)OnStart
+- Fires when the monitored application starts
+
+Changelog:
+------------------------------------------------------------------------------
+v0.2 (2010-01-??)
+ - Fixed bang unregistration problem
+
+v0.1 (2009-12-28)
+ - Initial Release.
