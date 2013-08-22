@@ -12,24 +12,28 @@
 // Module entry point
 BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID /* pvReserved */)
 {
-	if (dwReason == DLL_PROCESS_ATTACH)
+    if (dwReason == DLL_PROCESS_ATTACH)
+    {
 		DisableThreadLibraryCalls(hInst);
+    }
 
 	return TRUE;
 }
 
 
 // Called on module load
-int initModuleEx(HWND hwndParent, HINSTANCE hDllInstance, LPCSTR szPath)
+int initModuleW(HWND hwndParent, HINSTANCE hDllInstance, LPCWSTR szPath)
 {
 	g_hParent = hwndParent;
 	g_hInstance = hDllInstance;
-	StringCchCopy(g_szPath, sizeof(g_szPath), szPath);
+	StringCchCopy(g_szPath, _countof(g_szPath), szPath);
 
-	if (!CreateMessageHandler())
+    if (!CreateMessageHandler())
+    {
 		return 1;
+    }
 
-	AddBangCommand("!ApplicationMonitor", BangApplicationMonitor);
+	AddBangCommand(_T("!ApplicationMonitor"), BangApplicationMonitor);
 
 	LoadConfig();
 
@@ -40,7 +44,7 @@ int initModuleEx(HWND hwndParent, HINSTANCE hDllInstance, LPCSTR szPath)
 // Called on module unload
 void quitModule(HINSTANCE hDllInstance)
 {
-	RemoveBangCommand("!ApplicationMonitor");
+	RemoveBangCommand(_T("!ApplicationMonitor"));
 
 	if (g_hwndMessageHandler)
 	{
@@ -56,9 +60,9 @@ void quitModule(HINSTANCE hDllInstance)
 void LoadConfig()
 {
 	LPVOID f = LCOpen(NULL);
-	char szLine[MAX_LINE_LENGTH];
+	TCHAR szLine[MAX_LINE_LENGTH];
 
-	while (LCReadNextConfig(f, "*ApplicationMonitor", szLine, sizeof(szLine)))
+	while (LCReadNextConfig(f, _T("*ApplicationMonitor"), szLine, _countof(szLine)))
 	{
 		ParseConfigLine(szLine);
 	}
@@ -68,31 +72,39 @@ void LoadConfig()
 
 
 //
-void BangApplicationMonitor(HWND, LPCSTR pszArgs)
+void BangApplicationMonitor(HWND, LPCTSTR pszArgs)
 {
 	ParseConfigLine(pszArgs);
 }
 
 
 // 
-void ParseConfigLine(LPCSTR szLine)
+void ParseConfigLine(LPCTSTR szLine)
 {
-	char szTimer[MAX_LINE_LENGTH];
-	LPCSTR pszNext = szLine;
+	TCHAR szTimer[MAX_LINE_LENGTH];
+	LPCTSTR pszNext = szLine;
 	MonitorData monData;
 	monData.iUpdateFrequency = 100;
 
 	// Retrive information from the line
 	GetToken(pszNext, monData.szName, &pszNext, false);
 	GetToken(pszNext, monData.szName, &pszNext, false);
-	if (strcmp(monData.szName, "") == 0)
+    if (*monData.szName == _T('\0'))
+    {
 		return;
+    }
 	GetToken(pszNext, monData.szApplication, &pszNext, false);
-	if (strcmp(monData.szApplication, "") == 0)
+    if (*monData.szApplication == _T('\0'))
+    {
 		return;
-	if (GetToken(pszNext, szTimer, &pszNext, false))
-		if (strcmp(szTimer, "") != 0)
-			monData.iUpdateFrequency = atoi(szTimer);
+    }
+    if (GetToken(pszNext, szTimer, &pszNext, false))
+    { 
+        if (*szTimer != _T('\0'))
+        {
+			monData.iUpdateFrequency = _ttoi(szTimer);
+        }
+    }
 
 	// Keep the timer within resonable bounds
 	if (monData.iUpdateFrequency > USER_TIMER_MAXIMUM) monData.iUpdateFrequency = USER_TIMER_MAXIMUM;
@@ -113,8 +125,8 @@ void ParseConfigLine(LPCSTR szLine)
 	SetTimer(g_hwndMessageHandler, id, monData.iUpdateFrequency, NULL);
 
 	// Load events from the RCs
-	GetPrefixedRCLine(monData.szOnStart, monData.szName, "OnStart", "");
-	GetPrefixedRCLine(monData.szOnEnd, monData.szName, "OnEnd", "");
+	GetPrefixedRCLine(monData.szOnStart, monData.szName, _T("OnStart"), _T(""));
+	GetPrefixedRCLine(monData.szOnEnd, monData.szName, _T("OnEnd"), _T(""));
 
 	// Store all information in the MonitorMap
 	g_MonitorMap.insert(MonitorMap::value_type(id, monData));
@@ -134,12 +146,14 @@ void Check(UINT id, bool bInitialize)
 
 		iter->second.bIsRunning = AppIsRunning(iter->second.szApplication);
 
-		if (bInitialize)
-			SetEvar(iter->second.szName, "IsRunning", "%s", iter->second.bIsRunning ? "true" : "false");
+        if (bInitialize)
+        {
+			SetEvar(iter->second.szName, _T("IsRunning"), _T("%s"), iter->second.bIsRunning ? _T("true") : _T("false"));
+        }
 
 		if (bInitialState != iter->second.bIsRunning )
 		{
-			SetEvar(iter->second.szName, "IsRunning", "%s", iter->second.bIsRunning ? "true" : "false");
+			SetEvar(iter->second.szName, _T("IsRunning"), _T("%s"), iter->second.bIsRunning ? _T("true") : _T("false"));
 			if (!bInitialize)
 			{
 				if (iter->second.bIsRunning)
@@ -157,17 +171,16 @@ void Check(UINT id, bool bInitialize)
 
 
 // Check whether or not an application is running
-bool AppIsRunning(LPCSTR szApp)
+bool AppIsRunning(LPCTSTR szApp)
 {
 	bool bReturn = false;
 	HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	PROCESSENTRY32* processInfo = new PROCESSENTRY32;
 	processInfo->dwSize = sizeof(PROCESSENTRY32);
-	int index = 0;
 
-	while(Process32Next(hSnapShot, processInfo) != FALSE)
+	while (Process32Next(hSnapShot, processInfo) != FALSE)
 	{
-		if (!strcmp(processInfo->szExeFile, szApp))
+		if (!_tcscmp(processInfo->szExeFile, szApp))
 		{
 			bReturn = true;
 			break;
@@ -182,26 +195,26 @@ bool AppIsRunning(LPCSTR szApp)
 
 
 // Sets an evironment variable
-void SetEvar(LPCSTR pszName, LPCSTR pszEvar, LPCSTR pszFormat, ...)
+void SetEvar(LPCTSTR pszName, LPCTSTR pszEvar, LPCTSTR pszFormat, ...)
 {
-	char szValue[MAX_LINE_LENGTH] = { 0 };
-	char szEvar[MAX_LINE_LENGTH] = { 0 };
+	TCHAR szValue[MAX_LINE_LENGTH] = { 0 };
+	TCHAR szEvar[MAX_LINE_LENGTH] = { 0 };
 	va_list argList;
 
 	va_start(argList, pszFormat);
-	StringCchVPrintfA(szValue, MAX_LINE_LENGTH, pszFormat, argList);
+	StringCchVPrintf(szValue, MAX_LINE_LENGTH, pszFormat, argList);
 	va_end(argList);
 
-	StringCchPrintfA(szEvar, sizeof(szEvar), "%s%s", pszName, pszEvar);
+	StringCchPrintf(szEvar, sizeof(szEvar), _T("%s%s"), pszName, pszEvar);
 	LSSetVariable(szEvar, szValue);
 }
 
 
 // Retrive a prefixed line from the RCs
-void GetPrefixedRCLine(char *szDest, LPCSTR szPrefix, LPCSTR szOption, LPCSTR szDefault)
+void GetPrefixedRCLine(LPTSTR szDest, LPCTSTR szPrefix, LPCTSTR szOption, LPCTSTR szDefault)
 {
-	char szOptionName[MAX_LINE_LENGTH];
-	StringCchPrintf(szOptionName, MAX_LINE_LENGTH, "%s%s", szPrefix, szOption);
+	TCHAR szOptionName[MAX_LINE_LENGTH];
+	StringCchPrintf(szOptionName, MAX_LINE_LENGTH, _T("%s%s"), szPrefix, szOption);
 	GetRCLine(szOptionName, szDest, MAX_LINE_LENGTH, szDefault);
 }
 
@@ -222,8 +235,10 @@ bool CreateMessageHandler()
 
 	g_hwndMessageHandler = CreateWindowEx(WS_EX_TOOLWINDOW, g_szMsgHandler, 0, WS_POPUP, 0, 0, 0, 0, g_hParent, 0, g_hInstance, 0);
 
-	if (!g_hwndMessageHandler)
+    if (!g_hwndMessageHandler)
+    {
 		return false;
+    }
 	
 	SendMessage(GetLitestepWnd(), LM_REGISTERMESSAGE, (WPARAM)g_hwndMessageHandler, (LPARAM)g_lsMessages);
 
@@ -244,10 +259,12 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 	case LM_GETREVID:
 		{
-			StringCchPrintf((char*)lParam, 64, "%s: %s", g_szAppName, g_rcsRevision);
+			StringCchPrintf((LPTSTR)lParam, 64, _T("%s: %s"), g_szAppName, g_rcsRevision);
 			size_t uLength;
-			if (SUCCEEDED(StringCchLength((char*)lParam, 64, &uLength)))
+            if (SUCCEEDED(StringCchLength((LPTSTR) lParam, 64, &uLength)))
+            {
 				return uLength;
+            }
 			lParam = NULL;
 			return 0;
 		}
@@ -258,5 +275,6 @@ LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			return 0;
 		}
 	}
+
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
