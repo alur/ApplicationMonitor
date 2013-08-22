@@ -1,3 +1,10 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *  ApplicationMonitor.h
+ *  ApplicationMonitor
+ *
+ *  Constants and function declarations for ApplicationMonitor.
+ *  
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 #include <map>
 #include <string>
 #include <windows.h>
@@ -6,13 +13,14 @@
 #include <tlhelp32.h>
 
 // Constants
-const char g_rcsRevision[]	= "0.1";
+const char g_rcsRevision[]	= "0.2";
 const char g_szAppName[]	= "ApplicationMonitor";
 const char g_szMsgHandler[]	= "LSApplicationMonitorManager";
-const UINT g_lsMessages[]	= {LM_GETREVID, LM_REFRESH, 0};
+const UINT g_lsMessages[]	= { LM_GETREVID, LM_REFRESH, 0 };
 
 // Typedefs
-typedef struct MonitorData {
+typedef struct MonitorData
+{
 	char szName[64];
 	char szApplication[MAX_PATH];
 	UINT iUpdateFrequency;

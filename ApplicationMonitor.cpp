@@ -1,4 +1,13 @@
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+ *  ApplicationMonitor.cpp
+ *  ApplicationMonitor
+ *
+ *  Main code for ApplicationMonitor. A simple module which triggers events
+ *  when programs start or stop.
+ *  
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 #include "ApplicationMonitor.h"
+
 
 // Module entry point
 BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID /* pvReserved */)
@@ -8,6 +17,7 @@ BOOL APIENTRY DllMain(HINSTANCE hInst, DWORD dwReason, LPVOID /* pvReserved */)
 
 	return TRUE;
 }
+
 
 // Called on module load
 int initModuleEx(HWND hwndParent, HINSTANCE hDllInstance, LPCSTR szPath)
@@ -26,6 +36,7 @@ int initModuleEx(HWND hwndParent, HINSTANCE hDllInstance, LPCSTR szPath)
 	return 0;
 }
 
+
 // Called on module unload
 void quitModule(HINSTANCE hDllInstance)
 {
@@ -39,6 +50,7 @@ void quitModule(HINSTANCE hDllInstance)
 
 	UnregisterClass(g_szMsgHandler, hDllInstance);
 }
+
 
 // Loads all the .RC configurations
 void LoadConfig()
@@ -54,11 +66,13 @@ void LoadConfig()
 	LCClose(f);
 }
 
+
 //
 void BangApplicationMonitor(HWND, LPCSTR pszArgs)
 {
 	ParseConfigLine(pszArgs);
 }
+
 
 // 
 void ParseConfigLine(LPCSTR szLine)
@@ -109,6 +123,7 @@ void ParseConfigLine(LPCSTR szLine)
 	Check(id, true);
 }
 
+
 // Check if the application is running
 void Check(UINT id, bool bInitialize)
 {
@@ -140,6 +155,7 @@ void Check(UINT id, bool bInitialize)
 	}
 }
 
+
 // Check whether or not an application is running
 bool AppIsRunning(LPCSTR szApp)
 {
@@ -164,6 +180,7 @@ bool AppIsRunning(LPCSTR szApp)
 	return bReturn;
 }
 
+
 // Sets an evironment variable
 void SetEvar(LPCSTR pszName, LPCSTR pszEvar, LPCSTR pszFormat, ...)
 {
@@ -179,6 +196,7 @@ void SetEvar(LPCSTR pszName, LPCSTR pszEvar, LPCSTR pszFormat, ...)
 	LSSetVariable(szEvar, szValue);
 }
 
+
 // Retrive a prefixed line from the RCs
 void GetPrefixedRCLine(char *szDest, LPCSTR szPrefix, LPCSTR szOption, LPCSTR szDefault)
 {
@@ -186,6 +204,7 @@ void GetPrefixedRCLine(char *szDest, LPCSTR szPrefix, LPCSTR szOption, LPCSTR sz
 	StringCchPrintf(szOptionName, MAX_LINE_LENGTH, "%s%s", szPrefix, szOption);
 	GetRCLine(szOptionName, szDest, MAX_LINE_LENGTH, szDefault);
 }
+
 
 // Creates the message handler
 bool CreateMessageHandler()
@@ -210,6 +229,7 @@ bool CreateMessageHandler()
 
 	return true;
 }
+
 
 // Message Handler
 LRESULT WINAPI MessageHandlerProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
